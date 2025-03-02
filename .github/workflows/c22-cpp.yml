@@ -1,0 +1,28 @@
+name: Build 64-bit DLL
+
+on: [push, pull_request]  # 触发编译的事件（每次推送或 PR）
+
+jobs:
+  build:
+    runs-on: windows-latest  # 运行环境：Windows 服务器
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4  # 获取代码
+
+    - name: Install MinGW-w64
+      run: |
+        choco install mingw -y
+        echo "C:\ProgramData\chocolatey\bin" >> $GITHUB_PATH
+
+    - name: Build DLL
+      run: |
+        cd src
+        gcc -c -DLWS_EXPORTS lws2mql.c
+        gcc -shared -o lws2mql.dll lws2mql.o -L..\lib\ -lwebsockets
+
+    - name: Upload DLL as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: compiled-dll
+        path: src/lws2mql.dll
