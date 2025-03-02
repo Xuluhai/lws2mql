@@ -1,0 +1,29 @@
+name: Build 64-bit DLL
+
+on: [push, pull_request]  # 触发编译的事件（每次推送或 PR）
+
+jobs:
+  build:
+    runs-on: windows-latest  # 运行环境：最新的 Windows 服务器
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2  # 拉取代码仓库
+
+    - name: Install dependencies
+      run: |
+        choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
+        choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK.19041"
+
+    - name: Build DLL
+      run: |
+        mkdir build
+        cd build
+        cmake -G "Visual Studio 17 2022" -A x64 ..
+        cmake --build . --config Release
+
+    - name: Upload DLL as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: compiled-dll
+        path: build/Release/*.dll
